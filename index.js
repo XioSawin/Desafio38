@@ -32,16 +32,18 @@ const portCL = process.argv[2] || 5504;
 const passport = require('passport');
 
 /* -------------- graphql -------------- */
+let productList = [];
 
 const schema = buildSchema(`
     type Query {
-        mensaje: String,
+        producto(id: Int!): Producto,
         productos: [Producto]
     }
     type Mutation {
         guardarProducto(nombre: String!,codigo: Int!,precio: Int!,stock: Int!): Producto
     },
     type Producto {
+        id: Int
         nombre: String
         codigo: Int
         precio: Int
@@ -49,11 +51,29 @@ const schema = buildSchema(`
     }    
 `);
 
-// Root resolver
+const getProduct = () => {
+    return productList;
+}
+
+const getProductById = (args) => {
+    let id = args.id;
+
+    return productList.filter(producto => {
+        return producto.id == id;
+    })[0];
+}
+
+const addProduct = (id, nombre, codigo, precio, stock) => {
+    const producto = new Producto(id, nombre, codigo, precio, stock);
+    productList.push(producto);
+
+    return productList;
+}
+
 const root = {
-    mensaje: () => 'GraphQL: Ingrese Artículo',
-    articulos : () => articulos,
-    guardarArticulo : guardarArticulo
+    producto: getProductById,
+    productos : getProduct,
+    guardarProducto : addProduct
 };
 
 app.use('/graphql', graphqlHTTP({
